@@ -13,23 +13,48 @@ export function useScreenRecorder() {
     }
 
     try {
-      const displayStream = await navigator.mediaDevices.getDisplayMedia({
-        video: {
-          cursor: "always",
-        },
+      // Screen
+        const displayStream = await navigator.mediaDevices.getDisplayMedia({
+  video: {
+    cursor: "always",
+  },
+  audio: true,
+});
+
+console.log(
+  "Display audio tracks:",
+  displayStream.getAudioTracks().length
+);
+console.log(displayStream.getAudioTracks());
+
+      // Microphone
+      const micStream = await navigator.mediaDevices.getUserMedia({
         audio: true,
       });
 
-      setStream(displayStream);
+      console.log("Mic tracks:", micStream.getAudioTracks().length);
+    console.log("Mic track details:", micStream.getAudioTracks());
 
-      // Choose best supported format
+      // Combine screen + mic
+      const combinedStream = new MediaStream([
+        ...displayStream.getVideoTracks(),
+        ...displayStream.getAudioTracks(),
+        ...micStream.getAudioTracks(),
+      ]);
+
+      console.log("Combined stream:", combinedStream);
+      console.log("Video tracks:", combinedStream.getVideoTracks().length);
+      console.log("Audio tracks:", combinedStream.getAudioTracks().length);
+
+      setStream(combinedStream);
+
       const options = MediaRecorder.isTypeSupported(
         "video/webm;codecs=vp9"
       )
         ? { mimeType: "video/webm;codecs=vp9" }
         : { mimeType: "video/webm" };
 
-      const recorder = new MediaRecorder(displayStream, options);
+      const recorder = new MediaRecorder(combinedStream, options);
 
       mediaRecorderRef.current = recorder;
       chunksRef.current = [];
@@ -60,7 +85,6 @@ export function useScreenRecorder() {
         chunksRef.current = [];
       };
 
-      // If user clicks "Stop sharing" in browser
       displayStream.getVideoTracks()[0].addEventListener("ended", () => {
         stopRecording();
       });
@@ -69,9 +93,14 @@ export function useScreenRecorder() {
 
       setIsRecording(true);
 
-      console.log("Recording Started");
     } catch (err) {
-      console.error(err);
+      if (err instanceof DOMException) {
+        console.error("DOMException");
+        console.error("Name:", err.name);
+        console.error("Message:", err.message);
+        } else {
+        console.error(err);
+        }
     }
   };
 
@@ -89,8 +118,6 @@ export function useScreenRecorder() {
     mediaRecorderRef.current = null;
     setStream(null);
     setIsRecording(false);
-
-    console.log("Recording Stopped");
   };
 
   return {
