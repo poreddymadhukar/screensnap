@@ -36,12 +36,17 @@ export function useScreenRecorder(): RecorderHook {
 
     try {
       // Screen
-        const displayStream = await navigator.mediaDevices.getDisplayMedia({
-  video: {
-    cursor: "always",
-  },
-  audio: true,
-});
+      const displayStream = await navigator.mediaDevices.getDisplayMedia({
+        video: {
+          cursor: settings.showCursor ? "always" : "never",
+
+          width: settings.quality === "1080p" ? 1920 : 1280,
+          height: settings.quality === "1080p" ? 1080 : 720,
+        },
+
+        audio: settings.browserAudio,
+      });
+      
 
 console.log(
   "Display audio tracks:",
@@ -50,19 +55,24 @@ console.log(
 console.log(displayStream.getAudioTracks());
 
       // Microphone
-      const micStream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-      });
+     const micStream = settings.microphone
+        ? await navigator.mediaDevices.getUserMedia({
+            audio: true,
+          })
+        : null;
 
-      console.log("Mic tracks:", micStream.getAudioTracks().length);
-    console.log("Mic track details:", micStream.getAudioTracks());
+if (micStream) {
+  console.log("Mic tracks:", micStream.getAudioTracks().length);
+  console.log("Mic track details:", micStream.getAudioTracks());
+}
+ 
 
       // Combine screen + mic
-      const combinedStream = new MediaStream([
-        ...displayStream.getVideoTracks(),
-        ...displayStream.getAudioTracks(),
-        ...micStream.getAudioTracks(),
-      ]);
+     const combinedStream = new MediaStream([
+  ...displayStream.getVideoTracks(),
+  ...displayStream.getAudioTracks(),
+  ...(micStream ? micStream.getAudioTracks() : []),
+]);
 
       console.log("Combined stream:", combinedStream);
       console.log("Video tracks:", combinedStream.getVideoTracks().length);

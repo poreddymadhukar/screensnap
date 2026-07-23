@@ -256,3 +256,81 @@ body {
     color:#9ca3af;
     font-size:14px;
 }
+/* ==========================
+   Settings Panel
+========================== */
+
+.settings-card {
+  margin: 20px;
+  padding: 20px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.settings-card h3 {
+  margin: 0 0 20px 0;
+  font-size: 20px;
+  color: #111827;
+}
+
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.setting-item:last-child {
+  border-bottom: none;
+}
+
+.setting-item label {
+  font-size: 15px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.setting-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.setting-item select {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: white;
+  font-size: 14px;
+  cursor: pointer;
+}
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.settings-title h3 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.settings-subtitle {
+  margin-top: 6px;
+  margin-bottom: 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.arrow {
+  font-size: 18px;
+  transition: transform 0.25s ease;
+}
+
+.arrow.open {
+  transform: rotate(90deg);
+}

@@ -3,6 +3,7 @@ import "./index.css";
 import Preview from "./components/Preview";
 import Recorder from "./components/Recorder";
 import { useScreenRecorder } from "./hooks/useScreenRecorder";
+import Settings from "./components/Settings";
 
 function App() {
   const recorder = useScreenRecorder();
@@ -33,7 +34,10 @@ function App() {
         <Preview stream={recorder.stream} />
 
         <Recorder {...recorder} />
-
+<Settings
+  settings={recorder.settings}
+  updateSettings={recorder.updateSettings}
+/>
        <footer className="footer">
          ScreenSnap • Your recordings stay on your device 🔒
       </footer>
