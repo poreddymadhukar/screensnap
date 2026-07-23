@@ -1,41 +1,43 @@
 import "./index.css";
 
-import Recorder from "./components/Recorder";
 import Preview from "./components/Preview";
+import Recorder from "./components/Recorder";
 import { useScreenRecorder } from "./hooks/useScreenRecorder";
 
 function App() {
-
   const recorder = useScreenRecorder();
 
   return (
     <main className="app">
+      <div className="recorder-card">
+        <div className="card-header">
+          <h2>🎥 ScreenSnap</h2>
+          <p>Private Screen Recording. Right in Your Browser.</p>
+        </div>
 
-      <section className="hero">
-
-        <h1>🎥 ScreenSnap</h1>
-
-        <p className="tagline">
-          Private Screen Recording. Right in Your Browser.
-        </p>
+        {recorder.isRecording && (
+          <div className="status-bar">
+            <span>🔴 REC</span>
+            <span>
+              {Math.floor(recorder.recordingTime / 60)
+                .toString()
+                .padStart(2, "0")}
+              :
+              {(recorder.recordingTime % 60)
+                .toString()
+                .padStart(2, "0")}
+            </span>
+          </div>
+        )}
 
         <Preview stream={recorder.stream} />
 
         <Recorder {...recorder} />
 
-        <div className="privacy-box">
-          <h3>🔒 Privacy First</h3>
-
-          <ul>
-            <li>✔ No uploads</li>
-            <li>✔ No login required</li>
-            <li>✔ Everything stays on your device</li>
-          </ul>
-
-        </div>
-
-      </section>
-
+       <footer className="footer">
+         ScreenSnap • Your recordings stay on your device 🔒
+      </footer>
+      </div>
     </main>
   );
 }

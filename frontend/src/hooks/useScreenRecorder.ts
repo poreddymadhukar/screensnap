@@ -1,16 +1,33 @@
-import { useState, useRef } from "react";
+import { useState, useRef } from "react"; 
+import type {
+  RecorderHook,
+  RecordingSettings,
+} from "../types/recorder";
 
-
-export function useScreenRecorder() {
+export function useScreenRecorder(): RecorderHook {
   const [isRecording, setIsRecording] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
-
+  const [settings, setSettings] = useState<RecordingSettings>({
+    microphone: true,
+    browserAudio: true,
+    showCursor: true,
+    quality: "1080p",
+  });
   const [recordingTime, setRecordingTime] = useState(0);
   const timerRef = useRef<number | null>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   
+
+  const updateSettings = (
+    newSettings: Partial<RecordingSettings>
+  ) => {
+    setSettings((prev) => ({
+      ...prev,
+      ...newSettings,
+    }));
+  };
 
   const startRecording = async () => {
     if (mediaRecorderRef.current?.state === "recording") {
@@ -148,6 +165,8 @@ console.log(displayStream.getAudioTracks());
   isRecording,
   recordingTime,
   stream,
+  settings,
+  updateSettings,
   startRecording,
   stopRecording,
 };
