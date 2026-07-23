@@ -1,11 +1,16 @@
 import { useState, useRef } from "react";
 
+
 export function useScreenRecorder() {
   const [isRecording, setIsRecording] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
 
+  const [recordingTime, setRecordingTime] = useState(0);
+  const timerRef = useRef<number | null>(null);
+
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  
 
   const startRecording = async () => {
     if (mediaRecorderRef.current?.state === "recording") {
@@ -93,6 +98,13 @@ console.log(displayStream.getAudioTracks());
 
       setIsRecording(true);
 
+     // Start timer
+     setRecordingTime(0);
+
+        timerRef.current = window.setInterval(() => {
+        setRecordingTime((prev) => prev + 1);
+    }, 1000);   
+
     } catch (err) {
       if (err instanceof DOMException) {
         console.error("DOMException");
@@ -104,26 +116,39 @@ console.log(displayStream.getAudioTracks());
     }
   };
 
-  const stopRecording = () => {
-    const recorder = mediaRecorderRef.current;
+ const stopRecording = () => {
+  const recorder = mediaRecorderRef.current;
 
-    if (recorder && recorder.state !== "inactive") {
-      recorder.stop();
-    }
+  // Stop recording
+  if (recorder && recorder.state !== "inactive") {
+    recorder.stop();
+  }
 
-    if (stream) {
-      stream.getTracks().forEach((track) => track.stop());
-    }
+  // Stop timer
+  if (timerRef.current) {
+    clearInterval(timerRef.current);
+    timerRef.current = null;
+  }
 
-    mediaRecorderRef.current = null;
-    setStream(null);
-    setIsRecording(false);
-  };
+  // Reset timer
+  setRecordingTime(0);
+
+  // Stop all tracks
+  if (stream) {
+    stream.getTracks().forEach((track) => track.stop());
+  }
+
+  // Reset state
+  mediaRecorderRef.current = null;
+  setStream(null);
+  setIsRecording(false);
+};
 
   return {
-    isRecording,
-    stream,
-    startRecording,
-    stopRecording,
-  };
+  isRecording,
+  recordingTime,
+  stream,
+  startRecording,
+  stopRecording,
+};
 }

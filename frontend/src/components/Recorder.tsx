@@ -1,8 +1,18 @@
-import { useState } from 'react';
-import { useScreenRecorder } from '../hooks/useScreenRecorder';
+import { useState } from "react";
 
-export default function Recorder() {
-  const { isRecording, startRecording, stopRecording } = useScreenRecorder();
+interface RecorderProps {
+  isRecording: boolean;
+  recordingTime: number;
+  startRecording: () => Promise<void>;
+  stopRecording: () => void;
+}
+
+export default function Recorder({
+  isRecording,
+  recordingTime,
+  startRecording,
+  stopRecording,
+}: RecorderProps) {
   const [error, setError] = useState<string | null>(null);
 
   const handleStart = async () => {
@@ -10,17 +20,26 @@ export default function Recorder() {
       await startRecording();
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to start recording');
+      setError(
+        err instanceof Error ? err.message : "Failed to start recording"
+      );
     }
   };
 
-  const handleStop = async () => {
-    try {
-      await stopRecording();
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to stop recording');
-    }
+  const handleStop = () => {
+    stopRecording();
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+      .toString()
+      .padStart(2, "0");
+
+    const secs = (seconds % 60)
+      .toString()
+      .padStart(2, "0");
+
+    return `${mins}:${secs}`;
   };
 
   return (
@@ -28,16 +47,22 @@ export default function Recorder() {
       <div className="controls">
         {!isRecording ? (
           <button onClick={handleStart} className="btn btn-primary">
-            Start Recording
+            🎥 Start Recording
           </button>
         ) : (
           <button onClick={handleStop} className="btn btn-danger">
-            Stop Recording
+            ⏹ Stop Recording
           </button>
         )}
       </div>
+
+      {isRecording && (
+        <div className="recording-indicator">
+          🔴 Recording {formatTime(recordingTime)}
+        </div>
+      )}
+
       {error && <div className="error">{error}</div>}
-      {isRecording && <div className="recording-indicator">● Recording...</div>}
     </div>
   );
 }
