@@ -31,16 +31,18 @@ function App() {
           </div>
         )}
 
-        <Preview stream={recorder.stream} />
+        <Preview stream={recorder.stream}
+          webcamEnabled={recorder.settings.webcam}
+        />
 
         <Recorder {...recorder} />
-<Settings
-  settings={recorder.settings}
-  updateSettings={recorder.updateSettings}
-/>
-       <footer className="footer">
-         ScreenSnap • Your recordings stay on your device 🔒
-      </footer>
+        <Settings
+          settings={recorder.settings}
+          updateSettings={recorder.updateSettings}
+        />
+        <footer className="footer">
+          ScreenSnap • Your recordings stay on your device 🔒
+        </footer>
       </div>
     </main>
   );

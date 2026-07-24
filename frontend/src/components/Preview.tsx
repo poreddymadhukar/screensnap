@@ -1,10 +1,15 @@
 import { useEffect, useRef } from "react";
+import WebcamOverlay from "./WebcamOverlay";
 
 interface PreviewProps {
   stream: MediaStream | null;
+  webcamEnabled: boolean;
 }
 
-export default function Preview({ stream }: PreviewProps) {
+export default function Preview({
+  stream,
+  webcamEnabled,
+}: PreviewProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -32,6 +37,8 @@ export default function Preview({ stream }: PreviewProps) {
           Live Preview
         </div>
       )}
+
+      <WebcamOverlay enabled={webcamEnabled} />
     </div>
   );
 }

@@ -17,21 +17,21 @@ export default function Settings({
   return (
     <div className="settings-card">
 
-     <div
-  className="settings-header"
-  onClick={() => setIsOpen(!isOpen)}
->
-  <div className="settings-title">
-    <h3>⚙️ Recording Settings</h3>
-    <p className="settings-subtitle">
-      Configure audio, video, and cursor options.
-    </p>
-  </div>
+      <div
+        className="settings-header"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <div className="settings-title">
+          <h3>⚙️ Recording Settings</h3>
+          <p className="settings-subtitle">
+            Configure audio, video, and cursor options.
+          </p>
+        </div>
 
-  <span className={`arrow ${isOpen ? "open" : ""}`}>
-    ▶
-  </span>
-</div>
+        <span className={`arrow ${isOpen ? "open" : ""}`}>
+          ▶
+        </span>
+      </div>
 
       {isOpen && (
         <>
@@ -91,6 +91,19 @@ export default function Settings({
               <option value="720p">720p</option>
               <option value="1080p">1080p</option>
             </select>
+          </div>
+          <div className="setting-item">
+            <label>📷 Webcam</label>
+
+            <input
+              type="checkbox"
+              checked={settings.webcam}
+              onChange={(e) =>
+                updateSettings({
+                  webcam: e.target.checked,
+                })
+              }
+            />
           </div>
         </>
       )}

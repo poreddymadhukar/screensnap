@@ -1,4 +1,4 @@
-import { useState, useRef } from "react"; 
+import { useState, useRef } from "react";
 import type {
   RecorderHook,
   RecordingSettings,
@@ -10,6 +10,7 @@ export function useScreenRecorder(): RecorderHook {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [settings, setSettings] = useState<RecordingSettings>({
     microphone: true,
+    webcam: false,
     browserAudio: true,
     showCursor: true,
     quality: "1080p",
@@ -19,7 +20,7 @@ export function useScreenRecorder(): RecorderHook {
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
-  
+
 
   const updateSettings = (
     newSettings: Partial<RecordingSettings>
@@ -47,33 +48,33 @@ export function useScreenRecorder(): RecorderHook {
 
         audio: settings.browserAudio,
       });
-      
 
-console.log(
-  "Display audio tracks:",
-  displayStream.getAudioTracks().length
-);
-console.log(displayStream.getAudioTracks()); 
+
+      console.log(
+        "Display audio tracks:",
+        displayStream.getAudioTracks().length
+      );
+      console.log(displayStream.getAudioTracks());
 
       // Microphone
-     const micStream = settings.microphone
+      const micStream = settings.microphone
         ? await navigator.mediaDevices.getUserMedia({
-            audio: true,
-          })
+          audio: true,
+        })
         : null;
 
-if (micStream) {
-  console.log("Mic tracks:", micStream.getAudioTracks().length);
-  console.log("Mic track details:", micStream.getAudioTracks());
-}
- 
+      if (micStream) {
+        console.log("Mic tracks:", micStream.getAudioTracks().length);
+        console.log("Mic track details:", micStream.getAudioTracks());
+      }
+
 
       // Combine screen + mic
-     const combinedStream = new MediaStream([
-  ...displayStream.getVideoTracks(),
-  ...displayStream.getAudioTracks(),
-  ...(micStream ? micStream.getAudioTracks() : []),
-]);
+      const combinedStream = new MediaStream([
+        ...displayStream.getVideoTracks(),
+        ...displayStream.getAudioTracks(),
+        ...(micStream ? micStream.getAudioTracks() : []),
+      ]);
 
       console.log("Combined stream:", combinedStream);
       console.log("Video tracks:", combinedStream.getVideoTracks().length);
@@ -126,91 +127,91 @@ if (micStream) {
 
       setIsRecording(true);
 
-     // Start timer
-     setRecordingTime(0);
+      // Start timer
+      setRecordingTime(0);
 
-        timerRef.current = window.setInterval(() => {
+      timerRef.current = window.setInterval(() => {
         setRecordingTime((prev) => prev + 1);
-    }, 1000);   
+      }, 1000);
 
     } catch (err) {
       if (err instanceof DOMException) {
         console.error("DOMException");
         console.error("Name:", err.name);
         console.error("Message:", err.message);
-        } else {
+      } else {
         console.error(err);
-        }
+      }
     }
   };
 
- const stopRecording = () => {
-  const recorder = mediaRecorderRef.current;
+  const stopRecording = () => {
+    const recorder = mediaRecorderRef.current;
 
-  // Stop recording
-  if (recorder && recorder.state !== "inactive") {
-    recorder.stop();
-  }
+    // Stop recording
+    if (recorder && recorder.state !== "inactive") {
+      recorder.stop();
+    }
 
-  // Stop timer
-  if (timerRef.current) {
-    clearInterval(timerRef.current);
-    timerRef.current = null;
-  }
-
-  // Reset timer
-  setRecordingTime(0);
-
-  // Stop all tracks
-  if (stream) {
-    stream.getTracks().forEach((track) => track.stop());
-  }
-
-  // Reset state
-  mediaRecorderRef.current = null;
-  setStream(null);
-  setIsRecording(false);
-};
-
-const pauseRecording = () => {
-  const recorder = mediaRecorderRef.current;
-
-  if (recorder && recorder.state === "recording") {
-    recorder.pause();
-
+    // Stop timer
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
 
-    setIsPaused(true);
-  }
-};
+    // Reset timer
+    setRecordingTime(0);
 
-const resumeRecording = () => {
-  const recorder = mediaRecorderRef.current;
+    // Stop all tracks
+    if (stream) {
+      stream.getTracks().forEach((track) => track.stop());
+    }
 
-  if (recorder && recorder.state === "paused") {
-    recorder.resume();
+    // Reset state
+    mediaRecorderRef.current = null;
+    setStream(null);
+    setIsRecording(false);
+  };
 
-    timerRef.current = window.setInterval(() => {
-      setRecordingTime((prev) => prev + 1);
-    }, 1000);
+  const pauseRecording = () => {
+    const recorder = mediaRecorderRef.current;
 
-    setIsPaused(false);
-  }
-};
+    if (recorder && recorder.state === "recording") {
+      recorder.pause();
 
-return {
-  isRecording,
-  isPaused,
-  recordingTime,
-  stream,
-  settings,
-  updateSettings,
-  startRecording,
-  pauseRecording,
-  resumeRecording,
-  stopRecording,
-};
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+
+      setIsPaused(true);
+    }
+  };
+
+  const resumeRecording = () => {
+    const recorder = mediaRecorderRef.current;
+
+    if (recorder && recorder.state === "paused") {
+      recorder.resume();
+
+      timerRef.current = window.setInterval(() => {
+        setRecordingTime((prev) => prev + 1);
+      }, 1000);
+
+      setIsPaused(false);
+    }
+  };
+
+  return {
+    isRecording,
+    isPaused,
+    recordingTime,
+    stream,
+    settings,
+    updateSettings,
+    startRecording,
+    pauseRecording,
+    resumeRecording,
+    stopRecording,
+  };
 }

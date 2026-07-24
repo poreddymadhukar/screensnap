@@ -352,3 +352,36 @@ body {
 .btn {
   min-width: 180px;
 }
+.preview-wrapper {
+  position: relative;
+  width: 100%;
+}
+.webcam-overlay {
+  position: absolute;
+
+  left: 20px;
+top: 20px;
+
+  width: 140px;
+  height: 140px;
+
+  border-radius: 50%;
+  object-fit: cover;
+
+  border: 3px solid #fff;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+
+  transition: transform 0.2s ease;
+
+  user-select: none;
+  -webkit-user-drag: none;
+
+  touch-action: none;
+
+  z-index: 10;
+}
+
+.webcam-overlay:hover {
+  transform: scale(1.03);
+  cursor: move;
+}
