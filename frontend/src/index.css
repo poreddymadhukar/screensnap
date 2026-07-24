@@ -334,3 +334,21 @@ body {
 .arrow.open {
   transform: rotate(90deg);
 }
+.btn-warning {
+  background: #f59e0b;
+  color: white;
+}
+
+.btn-warning:hover {
+  background: #d97706;
+}
+.controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 24px;      /* Space between buttons */
+  margin-top: 24px;
+}
+.btn {
+  min-width: 180px;
+}

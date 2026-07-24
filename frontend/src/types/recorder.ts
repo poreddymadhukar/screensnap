@@ -7,12 +7,15 @@ export interface RecordingSettings {
 
 export interface RecorderState {
   isRecording: boolean;
+  isPaused: boolean;
   recordingTime: number;
   stream: MediaStream | null;
 }
 
 export interface RecorderControls {
   startRecording: () => Promise<void>;
+  pauseRecording: () => void;
+  resumeRecording: () => void;
   stopRecording: () => void;
 }
 

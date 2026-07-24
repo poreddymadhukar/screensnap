@@ -5,6 +5,7 @@ import type {
 } from "../types/recorder";
 
 export function useScreenRecorder(): RecorderHook {
+  const [isPaused, setIsPaused] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [settings, setSettings] = useState<RecordingSettings>({
@@ -52,7 +53,7 @@ console.log(
   "Display audio tracks:",
   displayStream.getAudioTracks().length
 );
-console.log(displayStream.getAudioTracks());
+console.log(displayStream.getAudioTracks()); 
 
       // Microphone
      const micStream = settings.microphone
@@ -171,13 +172,45 @@ if (micStream) {
   setIsRecording(false);
 };
 
-  return {
+const pauseRecording = () => {
+  const recorder = mediaRecorderRef.current;
+
+  if (recorder && recorder.state === "recording") {
+    recorder.pause();
+
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
+    setIsPaused(true);
+  }
+};
+
+const resumeRecording = () => {
+  const recorder = mediaRecorderRef.current;
+
+  if (recorder && recorder.state === "paused") {
+    recorder.resume();
+
+    timerRef.current = window.setInterval(() => {
+      setRecordingTime((prev) => prev + 1);
+    }, 1000);
+
+    setIsPaused(false);
+  }
+};
+
+return {
   isRecording,
+  isPaused,
   recordingTime,
   stream,
   settings,
   updateSettings,
   startRecording,
+  pauseRecording,
+  resumeRecording,
   stopRecording,
 };
 }

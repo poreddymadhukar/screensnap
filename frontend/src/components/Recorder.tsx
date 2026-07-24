@@ -2,15 +2,21 @@ import { useState } from "react";
 
 interface RecorderProps {
   isRecording: boolean;
+  isPaused: boolean;
   recordingTime: number;
   startRecording: () => Promise<void>;
+  pauseRecording: () => void;
+  resumeRecording: () => void;
   stopRecording: () => void;
 }
 
 export default function Recorder({
   isRecording,
+  isPaused,
   recordingTime,
   startRecording,
+  pauseRecording,
+  resumeRecording,
   stopRecording,
 }: RecorderProps) {
   const [error, setError] = useState<string | null>(null);
@@ -24,10 +30,6 @@ export default function Recorder({
         err instanceof Error ? err.message : "Failed to start recording"
       );
     }
-  };
-
-  const handleStop = () => {
-    stopRecording();
   };
 
   const formatTime = (seconds: number) => {
@@ -46,19 +48,44 @@ export default function Recorder({
     <div className="recorder">
       <div className="controls">
         {!isRecording ? (
-          <button onClick={handleStart} className="btn btn-primary">
+          <button
+            onClick={handleStart}
+            className="btn btn-primary"
+          >
             🎥 Start Recording
           </button>
         ) : (
-          <button onClick={handleStop} className="btn btn-danger">
-            ⏹ Stop Recording
-          </button>
+          <>
+            {!isPaused ? (
+              <button
+                onClick={pauseRecording}
+                className="btn btn-warning"
+              >
+                ⏸ Pause
+              </button>
+            ) : (
+              <button
+                onClick={resumeRecording}
+                className="btn btn-primary"
+              >
+                ▶ Resume
+              </button>
+            )}
+
+            <button
+              onClick={stopRecording}
+              className="btn btn-danger"
+            >
+              ⏹ Stop
+            </button>
+          </>
         )}
       </div>
 
       {isRecording && (
         <div className="recording-indicator">
-          🔴 Recording {formatTime(recordingTime)}
+          {isPaused ? "⏸ Paused" : "🔴 Recording"}{" "}
+          {formatTime(recordingTime)}
         </div>
       )}
 
