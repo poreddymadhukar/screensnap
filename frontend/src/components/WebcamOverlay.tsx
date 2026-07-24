@@ -1,126 +1,186 @@
 import { useEffect, useRef, useState } from "react";
 
 interface WebcamOverlayProps {
-    enabled: boolean;
+  enabled: boolean;
 }
 
-export default function WebcamOverlay({
-    enabled,
-}: WebcamOverlayProps) {
-    const videoRef = useRef<HTMLVideoElement>(null);
-    const overlayRef = useRef<HTMLVideoElement>(null);
-    const [position, setPosition] = useState({
-        x: 20,
-        y: 20,
-    });
+export default function WebcamOverlay({ enabled }: WebcamOverlayProps) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState(() => {
+    const saved = localStorage.getItem("webcam-position");
 
-    const [dragging, setDragging] = useState(false);
+    if (saved) {
+      return JSON.parse(saved);
+    }
 
-    const [offset, setOffset] = useState({
-        x: 0,
-        y: 0,
-    });
-
-    const handleMouseDown = (e: React.MouseEvent<HTMLVideoElement>) => {
-        setDragging(true);
-
-        const rect = overlayRef.current?.getBoundingClientRect();
-
-        if (!rect) return;
-
-        setDragging(true);
-
-        setOffset({
-            x: e.clientX - rect.left,
-            y: e.clientY - rect.top,
-        });
+    return {
+      x: 20,
+      y: 20,
     };
-    useEffect(() => {
-        const handleMouseMove = (e: MouseEvent) => {
-            if (!dragging) return;
+  });
+  const [size, setSize] = useState(() => {
+    const saved = localStorage.getItem("webcam-size");
 
-            const newX = e.clientX - offset.x;
-            const newY = e.clientY - offset.y;
+    if (saved) {
+      return Number(saved);
+    }
 
-            const parent = overlayRef.current?.parentElement;
+    return 140;
+  });
+  const [dragging, setDragging] = useState(false);
+  const [resizing, setResizing] = useState(false);
 
-            if (!parent || !overlayRef.current) return;
+  const [startSize, setStartSize] = useState(140);
 
-            const parentRect = parent.getBoundingClientRect();
-            const overlayRect = overlayRef.current.getBoundingClientRect();
+  const [startMouseX, setStartMouseX] = useState(0);
+  const [offset, setOffset] = useState({
+    x: 0,
+    y: 0,
+  });
 
-            const maxX = parentRect.width - overlayRect.width;
-            const maxY = parentRect.height - overlayRect.height;
+  const handleMouseDown = (e: React.MouseEvent<HTMLVideoElement>) => {
+    const rect = containerRef.current?.getBoundingClientRect();
 
-            setPosition({
-                x: Math.max(0, Math.min(newX - parentRect.left, maxX)),
-                y: Math.max(0, Math.min(newY - parentRect.top, maxY)),
-            });
-        };
+    if (!rect) return;
 
-        const handleMouseUp = () => {
-            setDragging(false);
-        };
+    setDragging(true);
 
-        window.addEventListener("mousemove", handleMouseMove);
-        window.addEventListener("mouseup", handleMouseUp);
+    setOffset({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    });
+  };
+  const handleResizeMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation();
 
-        return () => {
-            window.removeEventListener("mousemove", handleMouseMove);
-            window.removeEventListener("mouseup", handleMouseUp);
-        };
-    }, [dragging, offset]);
+    setResizing(true);
+    setStartSize(size);
+    setStartMouseX(e.clientX);
+  };
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!dragging && !resizing) return;
 
-    useEffect(() => {
-        let stream: MediaStream | null = null;
+      if (resizing) {
+        const delta = e.clientX - startMouseX;
 
-        const startCamera = async () => {
-            if (!enabled) return;
+        const newSize = Math.max(80, Math.min(startSize + delta, 300));
 
-            try {
-                stream = await navigator.mediaDevices.getUserMedia({
-                    video: true,
-                });
+        setSize(newSize);
 
+        return;
+      }
 
-                if (videoRef.current) {
-                    videoRef.current.srcObject = stream;
+      const parent = containerRef.current?.parentElement;
+      const overlay = containerRef.current;
 
-                    videoRef.current
-                        .play()
-                        .then(() => console.log("Webcam playing"))
-                        .catch((err) => console.error("Play failed:", err));
-                }
-            } catch (err) {
-                console.error(err);
-            }
-        };
+      if (!parent || !overlay) return;
 
-        startCamera();
+      // Parent and webcam dimensions
+      const parentRect = parent.getBoundingClientRect();
+      const overlayRect = overlay.getBoundingClientRect();
 
-        return () => {
-            stream?.getTracks().forEach((track) => track.stop());
-        };
-    }, [enabled]);
+      // Calculate new position relative to the parent
+      const newX = e.clientX - parentRect.left - offset.x;
+      const newY = e.clientY - parentRect.top - offset.y;
 
-    if (!enabled) return null;
+      // Maximum allowed position
+      const maxX = parentRect.width - overlayRect.width;
+      const maxY = parentRect.height - overlayRect.height;
 
-    return (
-        <video
-            ref={(el) => {
-                videoRef.current = el;
-                overlayRef.current = el;
-            }}
-            autoPlay
-            playsInline
-            muted
-            draggable={false}
-            className="webcam-overlay"
-            style={{
-                left: `${position.x}px`,
-                top: `${position.y}px`,
-            }}
-            onMouseDown={handleMouseDown}
-        />
-    );
+      // Keep webcam inside the preview
+      const boundedX = Math.max(0, Math.min(newX, maxX));
+      const boundedY = Math.max(0, Math.min(newY, maxY));
+
+      setPosition({
+        x: boundedX,
+        y: boundedY,
+      });
+    };
+
+    const handleMouseUp = () => {
+      setDragging(false);
+      setResizing(false);
+    };
+
+    const handleWindowBlur = () => {
+      setDragging(false);
+      setResizing(false);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    window.addEventListener("blur", handleWindowBlur);
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("blur", handleWindowBlur);
+    };
+  }, [dragging, resizing, offset, startSize, startMouseX]);
+  useEffect(() => {
+    localStorage.setItem("webcam-position", JSON.stringify(position));
+  }, [position]);
+
+  useEffect(() => {
+    let stream: MediaStream | null = null;
+
+    const startCamera = async () => {
+      if (!enabled) return;
+
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+        });
+
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+
+          videoRef.current.play().catch((err) => {
+            console.error("Play failed:", err);
+          });
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    startCamera();
+
+    return () => {
+      stream?.getTracks().forEach((track) => track.stop());
+    };
+  }, [enabled]);
+
+  useEffect(() => {
+    localStorage.setItem("webcam-size", String(size));
+  }, [size]);
+
+  if (!enabled) return null;
+
+  return (
+    <div
+      ref={containerRef}
+      className="webcam-container"
+      style={{
+        left: `${position.x}px`,
+        top: `${position.y}px`,
+        width: `${size}px`,
+        height: `${size}px`,
+      }}
+    >
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        muted
+        draggable={false}
+        className="webcam-overlay"
+        onMouseDown={handleMouseDown}
+      />
+
+      <div className="resize-handle" onMouseDown={handleResizeMouseDown} />
+    </div>
+  );
 }
