@@ -1,6 +1,7 @@
 export interface RecordingSettings {
   microphone: boolean;
   webcam: boolean;
+  webcamStyle?: "circle" | "rounded" | "square";
   browserAudio: boolean;
   showCursor: boolean;
   quality: "720p" | "1080p";

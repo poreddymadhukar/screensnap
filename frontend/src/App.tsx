@@ -35,6 +35,7 @@ function App() {
             canvasRef={canvasRef}
             stream={recorder.stream}
             webcamStream={recorder.webcamStream}
+            webcamStyle={recorder.settings.webcamStyle}
           />
           {recorder.countdown !== null && (
             <div className="countdown-overlay" aria-live="assertive">

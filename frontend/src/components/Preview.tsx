@@ -4,12 +4,14 @@ import RecorderCanvas from "./RecorderCanvas";
 interface PreviewProps {
   stream: MediaStream | null;
   webcamStream: MediaStream | null;
+  webcamStyle?: "circle" | "rounded" | "square";
   canvasRef: RefObject<HTMLCanvasElement | null>;
 }
 
 export default function Preview({
   stream,
   webcamStream,
+  webcamStyle,
   canvasRef,
 }: PreviewProps) {
   return (
@@ -17,6 +19,7 @@ export default function Preview({
       ref={canvasRef}
       displayStream={stream}
       webcamStream={webcamStream}
+      webcamStyle={webcamStyle}
     />
   );
 }

@@ -3,10 +3,14 @@ import { forwardRef, useEffect, useRef } from "react";
 type RecorderCanvasProps = {
   displayStream: MediaStream | null;
   webcamStream?: MediaStream | null;
+  webcamStyle?: "circle" | "rounded" | "square";
 };
 
 const RecorderCanvas = forwardRef<HTMLCanvasElement, RecorderCanvasProps>(
-  function RecorderCanvas({ displayStream, webcamStream }, forwardedRef) {
+  function RecorderCanvas(
+    { displayStream, webcamStream, webcamStyle = "circle" },
+    forwardedRef,
+  ) {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const webcamPositionRef = useRef<{ x: number; y: number } | null>(null);
     const webcamDiameterRef = useRef(140);
@@ -126,9 +130,73 @@ const RecorderCanvas = forwardRef<HTMLCanvasElement, RecorderCanvasProps>(
         );
       };
 
-      const paintBlack = () => {
+      const paintBackground = () => {
         context.fillStyle = "#000000";
         context.fillRect(0, 0, displayWidth, displayHeight);
+      };
+
+      const drawScreen = () => {
+        if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+          context.drawImage(video, 0, 0, displayWidth, displayHeight);
+        }
+      };
+
+      const drawMouseEffects = () => {};
+      const drawWatermark = () => {};
+      const drawAnnotations = () => {};
+      const drawKeyboardOverlay = () => {};
+      const drawDebugOverlay = () => {};
+
+      const drawWebcam = () => {
+        if (webcamVideo.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+          return true;
+        }
+
+        ensureWebcamPosition();
+        const position = webcamPositionRef.current;
+        if (!position) {
+          return false;
+        }
+
+        const diameter = webcamDiameterRef.current;
+        const x = position.x;
+        const y = position.y;
+        const radius = diameter / 2;
+        const centerX = x + radius;
+        const centerY = y + radius;
+
+        context.save();
+        if (webcamStyle === "circle") {
+          context.beginPath();
+          context.arc(centerX, centerY, radius, 0, Math.PI * 2);
+          context.clip();
+        } else if (webcamStyle === "rounded") {
+          context.beginPath();
+          context.roundRect(x, y, diameter, diameter, 20);
+          context.clip();
+        }
+        context.drawImage(webcamVideo, x, y, diameter, diameter);
+        context.restore();
+
+        context.save();
+        context.fillStyle = "#ffffff";
+        context.strokeStyle = "#00000080";
+        context.lineWidth = 1;
+        context.fillRect(
+          x + diameter - handleSize / 2,
+          y + diameter - handleSize / 2,
+          handleSize,
+          handleSize,
+        );
+        context.strokeRect(
+          x + diameter - handleSize / 2,
+          y + diameter - handleSize / 2,
+          handleSize,
+          handleSize,
+        );
+        context.restore();
+
+        return true;
       };
 
       const resizeCanvas = () => {
@@ -151,56 +219,23 @@ const RecorderCanvas = forwardRef<HTMLCanvasElement, RecorderCanvasProps>(
 
         context.setTransform(dpr, 0, 0, dpr, 0, 0);
         ensureWebcamPosition();
-        paintBlack();
+        paintBackground();
       };
 
       const drawFrame = () => {
-        paintBlack();
+        paintBackground();
+        drawScreen();
+        drawMouseEffects();
 
-        if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
-          context.drawImage(video, 0, 0, displayWidth, displayHeight);
+        if (!drawWebcam()) {
+          frameId = window.requestAnimationFrame(drawFrame);
+          return;
         }
 
-        if (webcamVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
-          ensureWebcamPosition();
-          const position = webcamPositionRef.current;
-          if (!position) {
-            frameId = window.requestAnimationFrame(drawFrame);
-            return;
-          }
-
-          const diameter = webcamDiameterRef.current;
-          const x = position.x;
-          const y = position.y;
-          const radius = diameter / 2;
-          const centerX = x + radius;
-          const centerY = y + radius;
-
-          context.save();
-          context.beginPath();
-          context.arc(centerX, centerY, radius, 0, Math.PI * 2);
-          context.clip();
-          context.drawImage(webcamVideo, x, y, diameter, diameter);
-          context.restore();
-
-          context.save();
-          context.fillStyle = "#ffffff";
-          context.strokeStyle = "#00000080";
-          context.lineWidth = 1;
-          context.fillRect(
-            x + diameter - handleSize / 2,
-            y + diameter - handleSize / 2,
-            handleSize,
-            handleSize,
-          );
-          context.strokeRect(
-            x + diameter - handleSize / 2,
-            y + diameter - handleSize / 2,
-            handleSize,
-            handleSize,
-          );
-          context.restore();
-        }
+        drawWatermark();
+        drawAnnotations();
+        drawKeyboardOverlay();
+        drawDebugOverlay();
 
         frameId = window.requestAnimationFrame(drawFrame);
       };
@@ -338,7 +373,7 @@ const RecorderCanvas = forwardRef<HTMLCanvasElement, RecorderCanvasProps>(
         webcamVideo.pause();
         webcamVideo.srcObject = null;
       };
-    }, [displayStream, webcamStream]);
+    }, [displayStream, webcamStream, webcamStyle]);
 
     return (
       <canvas

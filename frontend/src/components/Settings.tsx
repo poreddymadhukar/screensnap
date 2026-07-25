@@ -3,24 +3,15 @@ import type { RecordingSettings } from "../types/recorder";
 
 interface SettingsProps {
   settings: RecordingSettings;
-  updateSettings: (
-    settings: Partial<RecordingSettings>
-  ) => void;
+  updateSettings: (settings: Partial<RecordingSettings>) => void;
 }
 
-export default function Settings({
-  settings,
-  updateSettings,
-}: SettingsProps) {
+export default function Settings({ settings, updateSettings }: SettingsProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <div className="settings-card">
-
-      <div
-        className="settings-header"
-        onClick={() => setIsOpen(!isOpen)}
-      >
+      <div className="settings-header" onClick={() => setIsOpen(!isOpen)}>
         <div className="settings-title">
           <h3>⚙️ Recording Settings</h3>
           <p className="settings-subtitle">
@@ -28,9 +19,7 @@ export default function Settings({
           </p>
         </div>
 
-        <span className={`arrow ${isOpen ? "open" : ""}`}>
-          ▶
-        </span>
+        <span className={`arrow ${isOpen ? "open" : ""}`}>▶</span>
       </div>
 
       {isOpen && (
@@ -105,9 +94,28 @@ export default function Settings({
               }
             />
           </div>
+
+          <div className="setting-item">
+            <label>Webcam Style</label>
+
+            <select
+              value={settings.webcamStyle ?? "circle"}
+              onChange={(e) =>
+                updateSettings({
+                  webcamStyle: e.target.value as
+                    | "circle"
+                    | "rounded"
+                    | "square",
+                })
+              }
+            >
+              <option value="circle">Circle</option>
+              <option value="rounded">Rounded</option>
+              <option value="square">Square</option>
+            </select>
+          </div>
         </>
       )}
-
     </div>
   );
 }
