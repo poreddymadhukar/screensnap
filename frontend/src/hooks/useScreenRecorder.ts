@@ -50,24 +50,22 @@ export function useScreenRecorder(): RecorderHook {
       });
 
 
-      console.log(
-        "Display audio tracks:",
-        displayStream.getAudioTracks().length
-      );
-      console.log(displayStream.getAudioTracks());
-
       // Microphone
-      const micStream = settings.microphone
-        ? await navigator.mediaDevices.getUserMedia({
-          audio: true,
-        })
-        : null;
+      let micStream: MediaStream | null = null;
 
-      if (micStream) {
-        console.log("Mic tracks:", micStream.getAudioTracks().length);
-        console.log("Mic track details:", micStream.getAudioTracks());
+      if (settings.microphone) {
+        try {
+          micStream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+          });
+
+        } catch (e) {
+          console.error("Microphone failed:", e);
+
+          // Continue recording even if mic fails
+          micStream = null;
+        }
       }
-
 
       // Combine screen + mic
       const combinedStream = new MediaStream([
@@ -75,10 +73,6 @@ export function useScreenRecorder(): RecorderHook {
         ...displayStream.getAudioTracks(),
         ...(micStream ? micStream.getAudioTracks() : []),
       ]);
-
-      console.log("Combined stream:", combinedStream);
-      console.log("Video tracks:", combinedStream.getVideoTracks().length);
-      console.log("Audio tracks:", combinedStream.getAudioTracks().length);
 
       setStream(combinedStream);
 
