@@ -36,6 +36,8 @@ function App() {
             stream={recorder.stream}
             webcamStream={recorder.webcamStream}
             webcamStyle={recorder.settings.webcamStyle}
+            outputWidth={recorder.settings.quality === "1080p" ? 1920 : 1280}
+            outputHeight={recorder.settings.quality === "1080p" ? 1080 : 720}
           />
           {recorder.countdown !== null && (
             <div className="countdown-overlay" aria-live="assertive">

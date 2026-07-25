@@ -5,6 +5,8 @@ interface PreviewProps {
   stream: MediaStream | null;
   webcamStream: MediaStream | null;
   webcamStyle?: "circle" | "rounded" | "square";
+  outputWidth: number;
+  outputHeight: number;
   canvasRef: RefObject<HTMLCanvasElement | null>;
 }
 
@@ -12,6 +14,8 @@ export default function Preview({
   stream,
   webcamStream,
   webcamStyle,
+  outputWidth,
+  outputHeight,
   canvasRef,
 }: PreviewProps) {
   return (
@@ -20,6 +24,8 @@ export default function Preview({
       displayStream={stream}
       webcamStream={webcamStream}
       webcamStyle={webcamStyle}
+      outputWidth={outputWidth}
+      outputHeight={outputHeight}
     />
   );
 }

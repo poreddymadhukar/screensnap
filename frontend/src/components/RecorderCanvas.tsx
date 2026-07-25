@@ -4,11 +4,19 @@ type RecorderCanvasProps = {
   displayStream: MediaStream | null;
   webcamStream?: MediaStream | null;
   webcamStyle?: "circle" | "rounded" | "square";
+  outputWidth?: number;
+  outputHeight?: number;
 };
 
 const RecorderCanvas = forwardRef<HTMLCanvasElement, RecorderCanvasProps>(
   function RecorderCanvas(
-    { displayStream, webcamStream, webcamStyle = "circle" },
+    {
+      displayStream,
+      webcamStream,
+      webcamStyle = "circle",
+      outputWidth = 1920,
+      outputHeight = 1080,
+    },
     forwardedRef,
   ) {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -207,17 +215,23 @@ const RecorderCanvas = forwardRef<HTMLCanvasElement, RecorderCanvasProps>(
           return;
         }
 
-        const dpr = window.devicePixelRatio || 1;
         displayWidth = Math.floor(width);
         displayHeight = Math.floor(height);
 
         canvas.style.width = `${displayWidth}px`;
         canvas.style.height = `${displayHeight}px`;
 
-        canvas.width = Math.floor(displayWidth * dpr);
-        canvas.height = Math.floor(displayHeight * dpr);
+        canvas.width = outputWidth;
+        canvas.height = outputHeight;
 
-        context.setTransform(dpr, 0, 0, dpr, 0, 0);
+        context.setTransform(
+          outputWidth / displayWidth,
+          0,
+          0,
+          outputHeight / displayHeight,
+          0,
+          0,
+        );
         ensureWebcamPosition();
         paintBackground();
       };
@@ -373,7 +387,7 @@ const RecorderCanvas = forwardRef<HTMLCanvasElement, RecorderCanvasProps>(
         webcamVideo.pause();
         webcamVideo.srcObject = null;
       };
-    }, [displayStream, webcamStream, webcamStyle]);
+    }, [displayStream, webcamStream, webcamStyle, outputWidth, outputHeight]);
 
     return (
       <canvas
