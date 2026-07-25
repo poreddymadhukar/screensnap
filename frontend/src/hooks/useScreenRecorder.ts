@@ -83,6 +83,8 @@ export function useScreenRecorder(
 
           width: settings.quality === "1080p" ? 1920 : 1280,
           height: settings.quality === "1080p" ? 1080 : 720,
+        } as MediaTrackConstraints & {
+          cursor: "always" | "never";
         },
 
         audio: settings.browserAudio,
