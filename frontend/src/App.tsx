@@ -30,11 +30,18 @@ function App() {
           </div>
         )}
 
-        <Preview
-          canvasRef={canvasRef}
-          stream={recorder.stream}
-          webcamStream={recorder.webcamStream}
-        />
+        <div className="preview-container">
+          <Preview
+            canvasRef={canvasRef}
+            stream={recorder.stream}
+            webcamStream={recorder.webcamStream}
+          />
+          {recorder.countdown !== null && (
+            <div className="countdown-overlay" aria-live="assertive">
+              <span className="countdown-number">{recorder.countdown}</span>
+            </div>
+          )}
+        </div>
 
         <Recorder {...recorder} />
         <Settings

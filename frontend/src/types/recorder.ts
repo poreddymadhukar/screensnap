@@ -12,6 +12,7 @@ export interface RecorderState {
   recordingTime: number;
   stream: MediaStream | null;
   webcamStream: MediaStream | null;
+  countdown: number | null;
 }
 
 export interface RecorderControls {

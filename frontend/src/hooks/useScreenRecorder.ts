@@ -8,6 +8,7 @@ export function useScreenRecorder(
   const [isRecording, setIsRecording] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [webcamStream, setWebcamStream] = useState<MediaStream | null>(null);
+  const [countdown, setCountdown] = useState<number | null>(null);
   const [settings, setSettings] = useState<RecordingSettings>({
     microphone: true,
     webcam: false,
@@ -174,6 +175,14 @@ export function useScreenRecorder(
         stopRecording();
       });
 
+      for (let seconds = 3; seconds > 0; seconds -= 1) {
+        setCountdown(seconds);
+        await new Promise<void>((resolve) => {
+          window.setTimeout(resolve, 1000);
+        });
+      }
+
+      setCountdown(null);
       recorder.start(1000);
 
       setIsRecording(true);
@@ -185,6 +194,7 @@ export function useScreenRecorder(
         setRecordingTime((prev) => prev + 1);
       }, 1000);
     } catch (err) {
+      setCountdown(null);
       if (err instanceof DOMException) {
         console.error("DOMException");
         console.error("Name:", err.name);
@@ -211,6 +221,7 @@ export function useScreenRecorder(
 
     // Reset timer
     setRecordingTime(0);
+    setCountdown(null);
 
     // Stop all tracks
     if (stream) {
@@ -264,6 +275,7 @@ export function useScreenRecorder(
     recordingTime,
     stream,
     webcamStream,
+    countdown,
     settings,
     updateSettings,
     startRecording,

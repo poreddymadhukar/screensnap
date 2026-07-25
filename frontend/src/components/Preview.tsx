@@ -13,12 +13,10 @@ export default function Preview({
   canvasRef,
 }: PreviewProps) {
   return (
-    <div className="preview-container">
-      <RecorderCanvas
-        ref={canvasRef}
-        displayStream={stream}
-        webcamStream={webcamStream}
-      />
-    </div>
+    <RecorderCanvas
+      ref={canvasRef}
+      displayStream={stream}
+      webcamStream={webcamStream}
+    />
   );
 }
