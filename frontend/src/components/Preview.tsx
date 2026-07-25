@@ -1,44 +1,24 @@
-import { useEffect, useRef } from "react";
-import WebcamOverlay from "./WebcamOverlay";
+import type { RefObject } from "react";
+import RecorderCanvas from "./RecorderCanvas";
 
 interface PreviewProps {
   stream: MediaStream | null;
-  webcamEnabled: boolean;
+  webcamStream: MediaStream | null;
+  canvasRef: RefObject<HTMLCanvasElement | null>;
 }
 
 export default function Preview({
   stream,
-  webcamEnabled,
+  webcamStream,
+  canvasRef,
 }: PreviewProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    if (!videoRef.current) return;
-
-    if (stream) {
-      videoRef.current.srcObject = stream;
-    } else {
-      videoRef.current.srcObject = null;
-    }
-  }, [stream]);
-
   return (
     <div className="preview-container">
-      <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-        muted
-        className="preview-video"
+      <RecorderCanvas
+        ref={canvasRef}
+        displayStream={stream}
+        webcamStream={webcamStream}
       />
-
-      {!stream && (
-        <div className="preview-placeholder">
-          Live Preview
-        </div>
-      )}
-
-      <WebcamOverlay enabled={webcamEnabled} />
     </div>
   );
 }

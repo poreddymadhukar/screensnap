@@ -11,6 +11,7 @@ export interface RecorderState {
   isPaused: boolean;
   recordingTime: number;
   stream: MediaStream | null;
+  webcamStream: MediaStream | null;
 }
 
 export interface RecorderControls {

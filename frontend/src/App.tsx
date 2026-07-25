@@ -1,12 +1,14 @@
 import "./index.css";
 
+import { useRef } from "react";
 import Preview from "./components/Preview";
 import Recorder from "./components/Recorder";
 import { useScreenRecorder } from "./hooks/useScreenRecorder";
 import Settings from "./components/Settings";
 
 function App() {
-  const recorder = useScreenRecorder();
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const recorder = useScreenRecorder(canvasRef);
 
   return (
     <main className="app">
@@ -23,16 +25,15 @@ function App() {
               {Math.floor(recorder.recordingTime / 60)
                 .toString()
                 .padStart(2, "0")}
-              :
-              {(recorder.recordingTime % 60)
-                .toString()
-                .padStart(2, "0")}
+              :{(recorder.recordingTime % 60).toString().padStart(2, "0")}
             </span>
           </div>
         )}
 
-        <Preview stream={recorder.stream}
-          webcamEnabled={recorder.settings.webcam}
+        <Preview
+          canvasRef={canvasRef}
+          stream={recorder.stream}
+          webcamStream={recorder.webcamStream}
         />
 
         <Recorder {...recorder} />
