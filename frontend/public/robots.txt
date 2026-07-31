@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://mariutil.com/screensnap/sitemap.xml
+Sitemap: https://screensnap.pages.dev/sitemap.xml
