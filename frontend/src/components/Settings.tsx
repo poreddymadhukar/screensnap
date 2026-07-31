@@ -39,7 +39,7 @@ export default function Settings({ settings, updateSettings }: SettingsProps) {
           </div>
 
           <div className="setting-item">
-            <label>🔊 Browser Audio</label>
+            <label>🔊 System Audio</label>
 
             <input
               type="checkbox"

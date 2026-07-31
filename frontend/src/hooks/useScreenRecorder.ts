@@ -23,6 +23,7 @@ export function useScreenRecorder(
   const chunksRef = useRef<Blob[]>([]);
 
   const canvasStreamRef = useRef<MediaStream | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
 
   const updateSettings = (newSettings: Partial<RecordingSettings>) => {
     setSettings((prev) => ({
@@ -77,7 +78,10 @@ export function useScreenRecorder(
 
     try {
       // Screen
-      const displayStream = await navigator.mediaDevices.getDisplayMedia({
+      const displayOptions: DisplayMediaStreamOptions & {
+        systemAudio?: "include" | "exclude";
+        windowAudio?: "system" | "window" | "exclude";
+      } = {
         video: {
           cursor: settings.showCursor ? "always" : "never",
 
@@ -88,6 +92,17 @@ export function useScreenRecorder(
         },
 
         audio: settings.browserAudio,
+        systemAudio: settings.browserAudio ? "include" : "exclude",
+        windowAudio: "system",
+      };
+
+      const displayStream =
+        await navigator.mediaDevices.getDisplayMedia(displayOptions);
+
+      const displayAudioTracks = displayStream.getAudioTracks();
+      console.info("Display audio tracks:", displayAudioTracks.length);
+      displayAudioTracks.forEach((track) => {
+        console.info("Display audio track settings:", track.getSettings());
       });
 
       // Microphone
@@ -134,9 +149,33 @@ export function useScreenRecorder(
       // Recording stream: canvas video + unchanged audio handling
       const recordingStream = new MediaStream([
         ...canvasStream.getVideoTracks(),
-        ...displayStream.getAudioTracks(),
-        ...(micStream ? micStream.getAudioTracks() : []),
       ]);
+
+      const audioStreams = [
+        new MediaStream(displayAudioTracks),
+        ...(micStream ? [new MediaStream(micStream.getAudioTracks())] : []),
+      ].filter((audioStream) => audioStream.getAudioTracks().length > 0);
+
+      if (audioStreams.length > 0) {
+        // MediaRecorder is more reliable with one mixed audio track than with
+        // separate system-audio and microphone tracks.
+        const audioContext = new AudioContext();
+        await audioContext.resume();
+        const audioDestination = audioContext.createMediaStreamDestination();
+
+        audioStreams.forEach((audioStream) => {
+          audioContext
+            .createMediaStreamSource(audioStream)
+            .connect(audioDestination);
+        });
+
+        audioContextRef.current = audioContext;
+        recordingStream.addTrack(audioDestination.stream.getAudioTracks()[0]);
+      } else {
+        console.warn(
+          "No audio track was provided. Enable Share system audio and/or Microphone.",
+        );
+      }
 
       const options = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
         ? { mimeType: "video/webm;codecs=vp9" }
@@ -234,6 +273,11 @@ export function useScreenRecorder(
     if (canvasStreamRef.current) {
       canvasStreamRef.current.getTracks().forEach((track) => track.stop());
       canvasStreamRef.current = null;
+    }
+
+    if (audioContextRef.current) {
+      void audioContextRef.current.close();
+      audioContextRef.current = null;
     }
 
     // Reset state
