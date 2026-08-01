@@ -8,7 +8,7 @@ import Settings from "./components/Settings";
 
 function App() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const recorder = useScreenRecorder(canvasRef);
+  const recorder = useScreenRecorder();
 
   return (
     <main className="app">

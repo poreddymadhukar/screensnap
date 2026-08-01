@@ -1,9 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import type { RecorderHook, RecordingSettings } from "../types/recorder";
 
-export function useScreenRecorder(
-  canvasRef: React.RefObject<HTMLCanvasElement | null>,
-): RecorderHook {
+export function useScreenRecorder(): RecorderHook {
   const [isPaused, setIsPaused] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -22,7 +20,6 @@ export function useScreenRecorder(
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
-  const canvasStreamRef = useRef<MediaStream | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
 
   const updateSettings = (newSettings: Partial<RecordingSettings>) => {
@@ -85,8 +82,15 @@ export function useScreenRecorder(
         video: {
           cursor: settings.showCursor ? "always" : "never",
 
-          width: settings.quality === "1080p" ? 1920 : 1280,
-          height: settings.quality === "1080p" ? 1080 : 720,
+          width: {
+            ideal: settings.quality === "1080p" ? 1920 : 1280,
+            max: settings.quality === "1080p" ? 1920 : 1280,
+          },
+          height: {
+            ideal: settings.quality === "1080p" ? 1080 : 720,
+            max: settings.quality === "1080p" ? 1080 : 720,
+          },
+          frameRate: { ideal: 30, max: 30 },
         } as MediaTrackConstraints & {
           cursor: "always" | "never";
         },
@@ -130,25 +134,10 @@ export function useScreenRecorder(
 
       setStream(combinedStream);
 
-      // Record from the same canvas used for the live preview, instead of
-      // creating a separate hidden canvas. This keeps the recorded video
-      // identical to what the user sees (screen + webcam overlay).
-      const canvas = canvasRef.current;
-
-      if (!canvas) {
-        console.error("Recording canvas is not available yet.");
-        displayStream.getTracks().forEach((track) => track.stop());
-        micStream?.getTracks().forEach((track) => track.stop());
-        setStream(null);
-        return;
-      }
-
-      const canvasStream = canvas.captureStream(30);
-      canvasStreamRef.current = canvasStream;
-
-      // Recording stream: canvas video + unchanged audio handling
+      // Record the original display track so browser background throttling
+      // cannot stall the video when the Zoom window is foregrounded.
       const recordingStream = new MediaStream([
-        ...canvasStream.getVideoTracks(),
+        ...displayStream.getVideoTracks(),
       ]);
 
       const audioStreams = [
@@ -177,9 +166,15 @@ export function useScreenRecorder(
         );
       }
 
-      const options = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
-        ? { mimeType: "video/webm;codecs=vp9" }
-        : { mimeType: "video/webm" };
+      const videoBitsPerSecond =
+        settings.quality === "1080p" ? 5_000_000 : 2_500_000;
+      const options: MediaRecorderOptions = {
+        mimeType: MediaRecorder.isTypeSupported("video/webm;codecs=vp8,opus")
+          ? "video/webm;codecs=vp8,opus"
+          : "video/webm",
+        videoBitsPerSecond,
+        audioBitsPerSecond: 128_000,
+      };
 
       const recorder = new MediaRecorder(recordingStream, options);
 
@@ -224,7 +219,7 @@ export function useScreenRecorder(
       }
 
       setCountdown(null);
-      recorder.start(1000);
+      recorder.start(10_000);
 
       setIsRecording(true);
 
@@ -267,12 +262,6 @@ export function useScreenRecorder(
     // Stop all tracks
     if (stream) {
       stream.getTracks().forEach((track) => track.stop());
-    }
-
-    // Stop the canvas capture stream used for recording
-    if (canvasStreamRef.current) {
-      canvasStreamRef.current.getTracks().forEach((track) => track.stop());
-      canvasStreamRef.current = null;
     }
 
     if (audioContextRef.current) {
